@@ -10,6 +10,36 @@ Windows desktop app for managing rental vehicles. The source repository contains
 
 The runtime ZIP contains PHP and MariaDB, so a separate XAMPP installation is not required.
 
+## Project Structure
+
+```text
+car-rental-system-offline/
+├── backend/                 # Laravel API and server-side application
+│   ├── app/                 # Models, controllers, and application services
+│   ├── database/            # Laravel migrations, seeders, and local database
+│   ├── routes/              # API and web route definitions
+│   ├── tests/               # Backend tests
+│   └── public/              # Laravel public entry point and assets
+├── frontend/                # Angular user interface
+│   ├── src/                 # Angular components, pages, services, and styles
+│   ├── public/              # Frontend public assets
+│   └── dist/                # Generated production build output
+├── desktop/                 # Electron desktop shell and process management
+│   ├── main.js              # Electron entry point
+│   └── config.js            # Desktop application configuration
+├── database/
+│   └── backup/              # SQL database backups
+├── runtime/                 # Bundled PHP and MariaDB runtime files
+├── .gitignore               # Ignored files and directories
+└── README.md                # Project documentation
+```
+
+The `backend/vendor/`, `frontend/node_modules/`, `desktop/node_modules/`, and
+`frontend/.angular/` directories are generated dependency or build-cache
+directories. They are not application source code and can be recreated during
+setup. The `runtime/` directory contains the local PHP and MariaDB binaries
+required to run the application offline.
+
 ## First-Time Setup
 
 1. Clone or download this repository. From its GitHub **Releases** page, download the runtime ZIP matching the project version, then extract it into the project root. The extracted `runtime/` folder must be beside `backend/`, `frontend/`, and `desktop/`. Move the complete project folder to a writable location, for example `C:\CarRentalSystem`.
