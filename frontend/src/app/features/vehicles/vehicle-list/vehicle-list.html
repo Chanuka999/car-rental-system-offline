@@ -1,0 +1,311 @@
+<div class="vehicle-page">
+
+  <div class="page-header">
+    <div>
+      <h1>Vehicle Management</h1>
+      <p>Manage your rental vehicles and fleet information.</p>
+    </div>
+
+    <button class="primary-btn" (click)="openCreateForm()">
+      + Add Vehicle
+    </button>
+  </div>
+
+  @if (successMessage()) {
+    <div class="alert success-alert">
+      {{ successMessage() }}
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="alert error-alert">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <div class="filter-section">
+
+    <input
+      type="text"
+      placeholder="Search vehicle, brand or registration..."
+      (input)="onSearch($event)"
+    />
+
+    <select (change)="onStatusChange($event)">
+      <option value="">All Status</option>
+      <option value="available">Available</option>
+      <option value="rented">Rented</option>
+      <option value="maintenance">Maintenance</option>
+    </select>
+
+  </div>
+
+  <div class="table-container">
+
+    <table>
+
+      <thead>
+        <tr>
+          <th>Vehicle</th>
+          <th>Registration No</th>
+          <th>Year</th>
+          <th>Seats</th>
+          <th>Daily Rate</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        @if (loading()) {
+          <tr>
+            <td colspan="7" class="empty-state">
+              Loading vehicles...
+            </td>
+          </tr>
+        }
+
+        @else if (vehicles().length === 0) {
+          <tr>
+            <td colspan="7" class="empty-state">
+              No vehicles found.
+            </td>
+          </tr>
+        }
+
+        @else {
+          @for (vehicle of vehicles(); track vehicle.id) {
+            <tr>
+
+              <td>
+                <div class="vehicle-info">
+                  <strong>{{ vehicle.vehicle_name }}</strong>
+                  <span>{{ vehicle.brand }} {{ vehicle.model }}</span>
+                </div>
+              </td>
+
+              <td>{{ vehicle.registration_number }}</td>
+
+              <td>{{ vehicle.manufacture_year || '-' }}</td>
+
+              <td>{{ vehicle.seating_capacity }}</td>
+
+              <td>
+                Rs. {{ vehicle.daily_rate | number:'1.2-2' }}
+              </td>
+
+              <td>
+                <span
+                  class="status-badge"
+                  [ngClass]="getStatusClass(vehicle.status)"
+                >
+                  {{ vehicle.status | titlecase }}
+                </span>
+              </td>
+
+              <td>
+                <div class="action-buttons">
+
+                  <button
+                    class="edit-btn"
+                    (click)="editVehicle(vehicle)"
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    class="delete-btn"
+                    (click)="deleteVehicle(vehicle)"
+                  >
+                    Delete
+                  </button>
+
+                </div>
+              </td>
+
+            </tr>
+          }
+        }
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+  <div class="pagination">
+
+    <span>
+      Total vehicles: {{ total() }}
+    </span>
+
+    <div class="pagination-controls">
+
+      <button
+        (click)="previousPage()"
+        [disabled]="currentPage() === 1"
+      >
+        Previous
+      </button>
+
+      <span>
+        Page {{ currentPage() }} of {{ lastPage() }}
+      </span>
+
+      <button
+        (click)="nextPage()"
+        [disabled]="currentPage() === lastPage()"
+      >
+        Next
+      </button>
+
+    </div>
+
+  </div>
+
+  @if (showForm()) {
+
+    <div class="modal-backdrop">
+
+      <div class="vehicle-modal">
+
+        <div class="modal-header">
+          <div>
+            <h2>
+              {{ editingVehicleId() ? 'Edit Vehicle' : 'Add New Vehicle' }}
+            </h2>
+            <p>Enter the vehicle information below.</p>
+          </div>
+
+          <button class="close-btn" (click)="closeForm()">
+            &times;
+          </button>
+        </div>
+
+        <form [formGroup]="vehicleForm" (ngSubmit)="saveVehicle()">
+
+          <div class="form-grid">
+
+            <div class="form-group">
+              <label>Vehicle Name *</label>
+              <input formControlName="vehicle_name" placeholder="Toyota Prius" />
+              @if (vehicleForm.controls.vehicle_name.touched &&
+                   vehicleForm.controls.vehicle_name.invalid) {
+                <small>Vehicle name is required.</small>
+              }
+            </div>
+
+            <div class="form-group">
+              <label>Brand *</label>
+              <input formControlName="brand" placeholder="Toyota" />
+              @if (vehicleForm.controls.brand.touched &&
+                   vehicleForm.controls.brand.invalid) {
+                <small>Brand is required.</small>
+              }
+            </div>
+
+            <div class="form-group">
+              <label>Model *</label>
+              <input formControlName="model" placeholder="Prius" />
+              @if (vehicleForm.controls.model.touched &&
+                   vehicleForm.controls.model.invalid) {
+                <small>Model is required.</small>
+              }
+            </div>
+
+            <div class="form-group">
+              <label>Registration Number *</label>
+              <input formControlName="registration_number" placeholder="CAB-1234" />
+              @if (vehicleForm.controls.registration_number.touched &&
+                   vehicleForm.controls.registration_number.invalid) {
+                <small>Registration number is required.</small>
+              }
+            </div>
+
+            <div class="form-group">
+              <label>Vehicle Type</label>
+              <select formControlName="vehicle_type">
+                <option value="">Select type</option>
+                <option value="Car">Car</option>
+                <option value="SUV">SUV</option>
+                <option value="Van">Van</option>
+                <option value="Jeep">Jeep</option>
+                <option value="Bus">Bus</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Manufacture Year</label>
+              <input type="number" formControlName="manufacture_year" />
+            </div>
+
+            <div class="form-group">
+              <label>Seating Capacity *</label>
+              <input type="number" formControlName="seating_capacity" />
+            </div>
+
+            <div class="form-group">
+              <label>Daily Rate (Rs.) *</label>
+              <input type="number" formControlName="daily_rate" />
+            </div>
+
+            <div class="form-group">
+              <label>Fuel Type</label>
+              <select formControlName="fuel_type">
+                <option value="">Select fuel</option>
+                <option value="Petrol">Petrol</option>
+                <option value="Diesel">Diesel</option>
+                <option value="Hybrid">Hybrid</option>
+                <option value="Electric">Electric</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Transmission</label>
+              <select formControlName="transmission">
+                <option value="">Select transmission</option>
+                <option value="Automatic">Automatic</option>
+                <option value="Manual">Manual</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Status</label>
+              <select formControlName="status">
+                <option value="available">Available</option>
+                <option value="rented">Rented</option>
+                <option value="maintenance">Maintenance</option>
+              </select>
+            </div>
+
+            <div class="form-group full-width">
+              <label>Description</label>
+              <textarea
+                formControlName="description"
+                rows="3"
+                placeholder="Enter vehicle details..."
+              ></textarea>
+            </div>
+
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="cancel-btn" (click)="closeForm()">
+              Cancel
+            </button>
+
+            <button type="submit" class="primary-btn">
+              {{ editingVehicleId() ? 'Update Vehicle' : 'Save Vehicle' }}
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+
+    </div>
+
+  }
+
+</div>
